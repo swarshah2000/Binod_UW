@@ -1,0 +1,59 @@
+# Application Configuration for TT FIX Order Adapter
+
+# ZeroMQ Configuration
+zmq:
+  order_port: 5555
+  bind_address: "tcp://*:5555"
+  socket_type: "PULL"
+  high_water_mark: 1000
+  receive_timeout: 100
+
+# FIX Configuration
+fix:
+  config_file: "config/fix_config.cfg"
+  data_dictionary: "FIX_SCHEMA/UAT_TT-FIX44.xml"
+  sender_comp_id: "YOUR_SENDER_COMP_ID"  # Replace with your actual SenderCompID
+  target_comp_id: "TTUAT_SERVER"
+  session_qualifier: "ORD"
+  heartbeat_interval: 30
+  reconnect_interval: 60
+  ssl_enabled: true
+  ssl_certificate: "./TTFIX.crt"
+
+# Trading Configuration
+trading:
+  default_currency: "USD"
+  default_exchange: "CBOE"
+  default_security_type: "OPT"
+  order_timeout_seconds: 30
+  
+  # Risk Management Limits
+  risk_limits:
+    enabled: true
+    max_order_size: 1000
+    max_daily_volume: 10000
+    max_orders_per_second: 10
+    max_position_size: 5000
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}"
+  rotation: "1 day"
+  retention: "30 days"
+  compression: "gz"
+  log_dir: "data/logs"
+  console_logging: true
+  file_logging: true
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  metrics_port: 8080
+  health_check_interval: 30
+  
+  # Alert Thresholds
+  alert_thresholds:
+    error_rate: 0.05        # 5% error rate threshold
+    latency_p99: 1000       # 1 second p99 latency threshold (ms)
+    queue_depth: 100        # Maximum queue depth

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  tt-fix-adapter:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: tt-fix-order-adapter
+    restart: unless-stopped
+    
+    ports:
+      - "5555:5555"  # ZMQ order port
+      - "8080:8080"  # Monitoring port
+    
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config
+      - ../certs:/app/certs:ro  # Mount certificates as read-only
+    
+    environment:
+      - PYTHONPATH=/app/src
+      - CONFIG_FILE=/app/config/app_config.yaml
+      - TZ=UTC
+    
+    networks:
+      - tt-fix-network
+    
+    healthcheck:
+      test: ["CMD", "python", "scripts/health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for session state (if needed)
+  redis:
+    image: redis:7-alpine
+    container_name: tt-fix-redis
+    restart: unless-stopped
+    
+    volumes:
+      - redis_data:/data
+    
+    networks:
+      - tt-fix-network
+    
+    command: redis-server --appendonly yes
+
+  # Optional: Monitoring dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tt-fix-grafana
+    restart: unless-stopped
+    
+    ports:
+      - "3000:3000"
+    
+    volumes:
+      - grafana_data:/var/lib/grafana
+    
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    
+    networks:
+      - tt-fix-network
+
+networks:
+  tt-fix-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  grafana_data:
+    driver: local

@@ -1,0 +1,74 @@
+# Logging Configuration for TT FIX Order Adapter
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}"
+  
+  detailed:
+    format: "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {process} | {thread} | {name}:{function}:{line} - {message}"
+  
+  json:
+    format: '{"timestamp": "{time:YYYY-MM-DD HH:mm:ss.SSS}", "level": "{level}", "module": "{name}", "function": "{function}", "line": {line}, "message": "{message}"}'
+
+handlers:
+  console:
+    level: INFO
+    formatter: default
+    colorize: true
+  
+  app_file:
+    level: INFO
+    formatter: detailed
+    rotation: "1 day"
+    retention: "30 days"
+    compression: "gz"
+    file: "data/logs/app_{time:YYYY-MM-DD}.log"
+  
+  error_file:
+    level: ERROR
+    formatter: detailed
+    rotation: "1 day"
+    retention: "30 days"
+    compression: "gz"
+    file: "data/logs/error_{time:YYYY-MM-DD}.log"
+  
+  order_file:
+    level: INFO
+    formatter: json
+    rotation: "1 day"
+    retention: "90 days"
+    compression: "gz"
+    file: "data/logs/orders_{time:YYYY-MM-DD}.log"
+    filter: "category == 'ORDER'"
+  
+  fix_file:
+    level: DEBUG
+    formatter: detailed
+    rotation: "1 day"
+    retention: "30 days"
+    compression: "gz"
+    file: "data/logs/fix_{time:YYYY-MM-DD}.log"
+    filter: "category == 'FIX'"
+
+loggers:
+  order_adapter:
+    level: INFO
+    handlers: [console, app_file]
+    propagate: false
+  
+  fix_gateway:
+    level: DEBUG
+    handlers: [console, fix_file]
+    propagate: false
+  
+  risk_manager:
+    level: INFO
+    handlers: [console, app_file, error_file]
+    propagate: false
+
+root:
+  level: INFO
+  handlers: [console, app_file, error_file]
